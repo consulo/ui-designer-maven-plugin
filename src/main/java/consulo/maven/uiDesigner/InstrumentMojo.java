@@ -51,7 +51,14 @@ public class InstrumentMojo extends AbstractMojo
 		try
 		{
 			String sourceDirectory = myMavenProject.getBuild().getSourceDirectory();
-			List<File> files = FileUtils.getFiles(new File(sourceDirectory), "**/*.form", null);
+			File sourceDirectoryFile = new File(sourceDirectory);
+			if(!sourceDirectoryFile.exists())
+			{
+				getLog().info(sourceDirectory + " is not exists");
+				return;
+			}
+
+			List<File> files = FileUtils.getFiles(sourceDirectoryFile, "**/*.form", null);
 			if(files.isEmpty())
 			{
 				return;
