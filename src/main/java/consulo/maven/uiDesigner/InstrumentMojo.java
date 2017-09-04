@@ -36,7 +36,7 @@ import consulo.maven.uiDesigner.cache.CacheLogic;
  * @author VISTALL
  * @since 28-May-17
  */
-@Mojo(name = "instrument", defaultPhase = LifecyclePhase.PROCESS_CLASSES, requiresOnline = false, requiresDependencyResolution = ResolutionScope.COMPILE)
+@Mojo(name = "instrument", defaultPhase = LifecyclePhase.PROCESS_CLASSES, requiresOnline = false, requiresDependencyResolution = ResolutionScope.COMPILE, threadSafe = true)
 public class InstrumentMojo extends AbstractMojo
 {
 	@Parameter(property = "project", defaultValue = "${project}")
@@ -119,7 +119,7 @@ public class InstrumentMojo extends AbstractMojo
 				{
 					cacheLogic.putCacheEntry(file, classFile);
 
-					getLog().info("Processed: " + file.getPath());
+					getLog().debug("Processed: " + file.getPath());
 				}
 			}
 
