@@ -42,8 +42,8 @@ public class InstrumentMojo extends AbstractMojo
 	@Parameter(property = "project", defaultValue = "${project}")
 	private MavenProject myMavenProject;
 
-	@Parameter
-	private boolean useJBScaling;
+	@Parameter(property = "useJBScaling", defaultValue = "false")
+	private boolean myUseJBScaling;
 
 	@Override
 	public void execute() throws MojoExecutionException, MojoFailureException
@@ -57,6 +57,8 @@ public class InstrumentMojo extends AbstractMojo
 				getLog().info(sourceDirectory + " is not exists");
 				return;
 			}
+
+			String outputDirectory = myMavenProject.getBuild().getOutputDirectory();
 
 			List<File> files = FileUtils.getFiles(sourceDirectoryFile, "**/*.form", null);
 			if(files.isEmpty())
@@ -94,10 +96,12 @@ public class InstrumentMojo extends AbstractMojo
 					continue;
 				}
 
+				String path = file.getPath();
+
 				cacheLogic.removeCacheEntry(file, classFile);
 
 				final AsmCodeGenerator codeGenerator = new AsmCodeGenerator(rootContainer, finder, new MavenNestedFormLoader(this, files, finder), false, new InstrumenterClassWriter(isJdk6() ?
-						ClassWriter.COMPUTE_FRAMES : ClassWriter.COMPUTE_MAXS, finder), useJBScaling);
+						ClassWriter.COMPUTE_FRAMES : ClassWriter.COMPUTE_MAXS, finder), myUseJBScaling);
 
 				codeGenerator.patchFile(classFile);
 
@@ -117,9 +121,13 @@ public class InstrumentMojo extends AbstractMojo
 				changed = true;
 				if(errors.length == 0)
 				{
+					String formRelativePath = path.substring(sourceDirectory.length(), path.length());
+
+					FileUtils.copyFile(file, new File(outputDirectory, formRelativePath));
+
 					cacheLogic.putCacheEntry(file, classFile);
 
-					getLog().debug("Processed: " + file.getPath());
+					getLog().debug("Processed: " + path);
 				}
 			}
 
