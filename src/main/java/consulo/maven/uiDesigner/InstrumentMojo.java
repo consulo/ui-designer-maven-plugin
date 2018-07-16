@@ -22,7 +22,7 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.util.FileUtils;
-import org.jetbrains.org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.ClassWriter;
 import com.intellij.compiler.instrumentation.InstrumentationClassFinder;
 import com.intellij.compiler.instrumentation.InstrumenterClassWriter;
 import com.intellij.uiDesigner.compiler.AsmCodeGenerator;
