@@ -123,6 +123,8 @@ public class CacheLogic
 
 	public void putCacheEntry(File file, File clasFile)
 	{
+		removeCacheEntry(file, clasFile);
+
 		myCacheEntries.add(new CacheEntry(file, file.lastModified(), clasFile, clasFile.lastModified()));
 	}
 }
