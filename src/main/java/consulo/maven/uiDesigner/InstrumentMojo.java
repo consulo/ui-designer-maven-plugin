@@ -1,28 +1,5 @@
 package consulo.maven.uiDesigner;
 
-import java.io.File;
-import java.lang.management.ManagementFactory;
-import java.net.MalformedURLException;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.net.URLClassLoader;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.StringTokenizer;
-
-import org.apache.maven.artifact.DependencyResolutionRequiredException;
-import org.apache.maven.plugin.AbstractMojo;
-import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugin.MojoFailureException;
-import org.apache.maven.plugins.annotations.LifecyclePhase;
-import org.apache.maven.plugins.annotations.Mojo;
-import org.apache.maven.plugins.annotations.Parameter;
-import org.apache.maven.plugins.annotations.ResolutionScope;
-import org.apache.maven.project.MavenProject;
-import org.codehaus.plexus.util.FileUtils;
-import consulo.internal.org.objectweb.asm.ClassWriter;
 import com.intellij.compiler.instrumentation.InstrumentationClassFinder;
 import com.intellij.compiler.instrumentation.InstrumenterClassWriter;
 import com.intellij.uiDesigner.compiler.AsmCodeGenerator;
@@ -30,7 +7,20 @@ import com.intellij.uiDesigner.compiler.FormErrorInfo;
 import com.intellij.uiDesigner.compiler.Utils;
 import com.intellij.uiDesigner.lw.CompiledClassPropertiesProvider;
 import com.intellij.uiDesigner.lw.LwRootContainer;
+import consulo.internal.org.objectweb.asm.ClassWriter;
 import consulo.maven.uiDesigner.cache.CacheLogic;
+import org.apache.maven.artifact.DependencyResolutionRequiredException;
+import org.apache.maven.plugin.AbstractMojo;
+import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.*;
+import org.apache.maven.project.MavenProject;
+import org.codehaus.plexus.util.FileUtils;
+
+import java.io.File;
+import java.lang.management.ManagementFactory;
+import java.net.*;
+import java.util.*;
 
 /**
  * @author VISTALL
@@ -48,6 +38,7 @@ public class InstrumentMojo extends AbstractMojo
 	@Override
 	public void execute() throws MojoExecutionException, MojoFailureException
 	{
+		String fileName = null;
 		try
 		{
 			String sourceDirectory = myMavenProject.getBuild().getSourceDirectory();
@@ -75,6 +66,8 @@ public class InstrumentMojo extends AbstractMojo
 			boolean changed = false;
 			for(File file : files)
 			{
+				fileName = file.getName();
+
 				LwRootContainer rootContainer = Utils.getRootContainer(file.toURI().toURL(), new CompiledClassPropertiesProvider(finder.getLoader()));
 
 				final String classToBind = rootContainer.getClassToBind();
@@ -115,21 +108,21 @@ public class InstrumentMojo extends AbstractMojo
 
 				for(FormErrorInfo error : errors)
 				{
-					getLog().error(error.getErrorMessage(), error.getThrowable());
+					throw new MojoFailureException(error.getErrorMessage(), error.getThrowable());
 				}
 
 				changed = true;
-				if(errors.length == 0)
-				{
-					String formRelativePath = path.substring(sourceDirectory.length(), path.length());
 
-					FileUtils.copyFile(file, new File(outputDirectory, formRelativePath));
+				String formRelativePath = path.substring(sourceDirectory.length(), path.length());
 
-					cacheLogic.putCacheEntry(file, classFile);
+				FileUtils.copyFile(file, new File(outputDirectory, formRelativePath));
 
-					getLog().debug("Processed: " + path);
-				}
+				cacheLogic.putCacheEntry(file, classFile);
+
+				getLog().debug("Processed: " + path);
 			}
+
+			fileName = null;
 
 			if(!changed)
 			{
@@ -140,9 +133,20 @@ public class InstrumentMojo extends AbstractMojo
 				cacheLogic.write();
 			}
 		}
+		catch (MojoFailureException e)
+		{
+			throw e;
+		}
 		catch(Exception e)
 		{
-			getLog().error(e);
+			if (fileName != null)
+			{
+				throw new MojoFailureException("Fail to compile form: " + fileName, e);
+			}
+			else
+			{
+				throw new MojoFailureException("", e);
+			}
 		}
 	}
 
