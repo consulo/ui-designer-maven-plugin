@@ -39,7 +39,7 @@ public class InstrumentMojo extends AbstractMojo
 	private MavenProject myMavenProject;
 
 	@Parameter(property = "useJBScaling", defaultValue = "false")
-	private boolean myUseJBScaling;
+	public boolean useJBScaling;
 
 	@Override
 	public void execute() throws MojoExecutionException, MojoFailureException
@@ -100,7 +100,7 @@ public class InstrumentMojo extends AbstractMojo
 				cacheLogic.removeCacheEntry(file, classFile);
 
 				final AsmCodeGenerator codeGenerator = new AsmCodeGenerator(rootContainer, finder, new MavenNestedFormLoader(this, files, finder), false, new InstrumenterClassWriter(isJdk6() ?
-						ClassWriter.COMPUTE_FRAMES : ClassWriter.COMPUTE_MAXS, finder), myUseJBScaling);
+						ClassWriter.COMPUTE_FRAMES : ClassWriter.COMPUTE_MAXS, finder), useJBScaling);
 
 				codeGenerator.patchFile(classFile);
 
